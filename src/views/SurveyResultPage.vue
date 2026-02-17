@@ -76,6 +76,21 @@ function goHome() {
 function takeTestAgain() {
   router.push('/survey')
 }
+
+// Semi-circle gauge: arc length = π * radius
+const GAUGE_R = 45
+const GAUGE_HALF_LENGTH = Math.PI * GAUGE_R
+
+function gaugeDash(value) {
+  const p = Math.min(1, Math.max(0, value / 100))
+  return `${p * GAUGE_HALF_LENGTH} ${GAUGE_HALF_LENGTH}`
+}
+
+function gaugeColor(value) {
+  if (value <= 33) return 'var(--gauge-green)'
+  if (value <= 66) return 'var(--gauge-yellow)'
+  return 'var(--gauge-red)'
+}
 </script>
 
 <template>
@@ -105,30 +120,57 @@ function takeTestAgain() {
           Your scores are being calculated. Check back shortly or save this link to view results
           later.
         </p>
-        <div class="metrics-cubes">
+        <div class="metrics-gauges">
           <article
             v-for="entry in metricEntries"
             :key="entry.key"
-            class="metric-cube"
+            class="gauge-widget"
             :class="{ 'has-value': entry.value != null && !Number.isNaN(Number(entry.value)) }"
           >
-            <div class="metric-cube-head">
-              <span class="metric-cube-label">{{ entry.label }}</span>
-              <span
-                v-if="entry.value != null && !Number.isNaN(Number(entry.value))"
-                class="metric-cube-value"
-              >{{ Math.round(Number(entry.value)) }}%</span>
-              <span v-else class="metric-cube-placeholder">—</span>
-            </div>
-            <div class="metric-cube-bar">
-              <div
-                class="metric-cube-fill"
-                :style="{
-                  width: entry.value != null && !Number.isNaN(Number(entry.value))
-                    ? `${Math.min(100, Math.max(0, Number(entry.value)))}%`
-                    : '0%'
-                }"
-              />
+            <p class="gauge-title">{{ entry.label }}</p>
+            <div class="gauge-wrap">
+              <svg class="gauge-svg" viewBox="0 0 120 75" aria-hidden="true">
+                <defs>
+                  <linearGradient :id="`gauge-track-${entry.key}`" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="var(--gauge-green)" />
+                    <stop offset="33%" stop-color="var(--gauge-green)" />
+                    <stop offset="33%" stop-color="var(--gauge-yellow)" />
+                    <stop offset="66%" stop-color="var(--gauge-yellow)" />
+                    <stop offset="66%" stop-color="var(--gauge-red)" />
+                    <stop offset="100%" stop-color="var(--gauge-red)" />
+                  </linearGradient>
+                </defs>
+                <path
+                  class="gauge-track"
+                  d="M 15 58 A 45 45 0 0 1 105 58"
+                  fill="none"
+                  :stroke="`url(#gauge-track-${entry.key})`"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                />
+                <path
+                  v-if="entry.value != null && !Number.isNaN(Number(entry.value))"
+                  class="gauge-fill"
+                  d="M 15 58 A 45 45 0 0 1 105 58"
+                  fill="none"
+                  :stroke="gaugeColor(Number(entry.value))"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  :stroke-dasharray="gaugeDash(Number(entry.value))"
+                />
+                <text
+                  class="gauge-value"
+                  x="60"
+                  y="48"
+                  text-anchor="middle"
+                  dominant-baseline="middle"
+                >
+                  <template v-if="entry.value != null && !Number.isNaN(Number(entry.value))">
+                    {{ Math.round(Number(entry.value)) }}%
+                  </template>
+                  <template v-else>—</template>
+                </text>
+              </svg>
             </div>
           </article>
         </div>
@@ -254,77 +296,73 @@ function takeTestAgain() {
   padding: 1rem;
 }
 
-.metrics-cubes {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.metrics-gauges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
-.metric-cube {
+.gauge-widget {
+  --gauge-green: #22c55e;
+  --gauge-yellow: #eab308;
+  --gauge-red: #ef4444;
   background: var(--color-background-mute);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: box-shadow 0.2s ease;
 }
 
-.metric-cube:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+.gauge-widget:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.metric-cube.has-value {
-  background: var(--color-background);
-  border-color: var(--color-border);
-}
-
-.metric-cube-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
-}
-
-.metric-cube-label {
+.gauge-title {
+  font-size: 0.8125rem;
   font-weight: 600;
-  font-size: 0.9375rem;
   color: var(--color-heading);
+  margin: 0 0 0.5rem;
   line-height: 1.3;
 }
 
-.metric-cube-value {
+.gauge-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-svg {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  display: block;
+}
+
+.gauge-track {
+  opacity: 0.4;
+}
+
+.gauge-fill {
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.gauge-value {
+  font-size: 1.1rem;
   font-weight: 700;
-  font-size: 1rem;
-  color: #2563eb;
-  flex-shrink: 0;
-}
-
-.metric-cube-placeholder {
-  font-weight: 500;
-  color: var(--color-text);
-  opacity: 0.6;
-}
-
-.metric-cube-bar {
-  height: 12px;
-  background: var(--color-background-soft);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.metric-cube-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
-  border-radius: 6px;
-  transition: width 0.4s ease;
+  fill: var(--color-heading);
 }
 
 @media (max-width: 520px) {
-  .metric-cube {
-    padding: 0.85rem 1rem;
+  .metrics-gauges {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
   }
-  .metric-cube-label {
-    font-size: 0.875rem;
+  .gauge-title {
+    font-size: 0.75rem;
+  }
+  .gauge-value {
+    font-size: 1rem;
   }
 }
 </style>
