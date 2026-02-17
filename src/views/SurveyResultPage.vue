@@ -105,19 +105,31 @@ function takeTestAgain() {
           Your scores are being calculated. Check back shortly or save this link to view results
           later.
         </p>
-        <div class="metrics-pills">
+        <div class="metrics-cubes">
           <article
             v-for="entry in metricEntries"
             :key="entry.key"
-            class="metric-pill"
+            class="metric-cube"
             :class="{ 'has-value': entry.value != null && !Number.isNaN(Number(entry.value)) }"
           >
-            <span class="metric-pill-label">{{ entry.label }}</span>
-            <span
-              v-if="entry.value != null && !Number.isNaN(Number(entry.value))"
-              class="metric-pill-value"
-            >{{ Math.round(Number(entry.value)) }}%</span>
-            <span v-else class="metric-pill-placeholder">—</span>
+            <div class="metric-cube-head">
+              <span class="metric-cube-label">{{ entry.label }}</span>
+              <span
+                v-if="entry.value != null && !Number.isNaN(Number(entry.value))"
+                class="metric-cube-value"
+              >{{ Math.round(Number(entry.value)) }}%</span>
+              <span v-else class="metric-cube-placeholder">—</span>
+            </div>
+            <div class="metric-cube-bar">
+              <div
+                class="metric-cube-fill"
+                :style="{
+                  width: entry.value != null && !Number.isNaN(Number(entry.value))
+                    ? `${Math.min(100, Math.max(0, Number(entry.value)))}%`
+                    : '0%'
+                }"
+              />
+            </div>
           </article>
         </div>
       </div>
@@ -242,55 +254,77 @@ function takeTestAgain() {
   padding: 1rem;
 }
 
-.metrics-pills {
+.metrics-cubes {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 0.75rem;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.metric-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+.metric-cube {
   background: var(--color-background-mute);
   border: 1px solid var(--color-border);
-  border-radius: 9999px;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.metric-pill:hover {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+.metric-cube:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-.metric-pill.has-value {
+.metric-cube.has-value {
   background: var(--color-background);
   border-color: var(--color-border);
 }
 
-.metric-pill-label {
+.metric-cube-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.metric-cube-label {
   font-weight: 600;
+  font-size: 0.9375rem;
   color: var(--color-heading);
   line-height: 1.3;
 }
 
-.metric-pill-value {
+.metric-cube-value {
   font-weight: 700;
+  font-size: 1rem;
   color: #2563eb;
   flex-shrink: 0;
 }
 
-.metric-pill-placeholder {
+.metric-cube-placeholder {
   font-weight: 500;
   color: var(--color-text);
   opacity: 0.6;
 }
 
+.metric-cube-bar {
+  height: 12px;
+  background: var(--color-background-soft);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.metric-cube-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
 @media (max-width: 520px) {
-  .metric-pill {
-    font-size: 0.8125rem;
-    padding: 0.4rem 0.85rem;
+  .metric-cube {
+    padding: 0.85rem 1rem;
+  }
+  .metric-cube-label {
+    font-size: 0.875rem;
   }
 }
 </style>
