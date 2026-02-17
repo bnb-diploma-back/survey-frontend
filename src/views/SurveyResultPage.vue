@@ -77,19 +77,13 @@ function takeTestAgain() {
   router.push('/survey')
 }
 
-// Semi-circle gauge: arc length = π * radius
-const GAUGE_R = 45
-const GAUGE_HALF_LENGTH = Math.PI * GAUGE_R
+// Circular ring: circumference = 2πr
+const RING_R = 40
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R
 
-function gaugeDash(value) {
+function ringDash(value) {
   const p = Math.min(1, Math.max(0, value / 100))
-  return `${p * GAUGE_HALF_LENGTH} ${GAUGE_HALF_LENGTH}`
-}
-
-function gaugeColor(value) {
-  if (value <= 33) return 'var(--gauge-green)'
-  if (value <= 66) return 'var(--gauge-yellow)'
-  return 'var(--gauge-red)'
+  return `${p * RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`
 }
 </script>
 
@@ -120,48 +114,42 @@ function gaugeColor(value) {
           Your scores are being calculated. Check back shortly or save this link to view results
           later.
         </p>
-        <div class="metrics-gauges">
+        <div class="metrics-rings">
           <article
             v-for="entry in metricEntries"
             :key="entry.key"
-            class="gauge-widget"
+            class="ring-widget"
             :class="{ 'has-value': entry.value != null && !Number.isNaN(Number(entry.value)) }"
           >
-            <p class="gauge-title">{{ entry.label }}</p>
-            <div class="gauge-wrap">
-              <svg class="gauge-svg" viewBox="0 0 120 75" aria-hidden="true">
-                <defs>
-                  <linearGradient :id="`gauge-track-${entry.key}`" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="var(--gauge-green)" />
-                    <stop offset="33%" stop-color="var(--gauge-green)" />
-                    <stop offset="33%" stop-color="var(--gauge-yellow)" />
-                    <stop offset="66%" stop-color="var(--gauge-yellow)" />
-                    <stop offset="66%" stop-color="var(--gauge-red)" />
-                    <stop offset="100%" stop-color="var(--gauge-red)" />
-                  </linearGradient>
-                </defs>
-                <path
-                  class="gauge-track"
-                  d="M 15 58 A 45 45 0 0 1 105 58"
+            <p class="ring-title">{{ entry.label }}</p>
+            <div class="ring-wrap">
+              <svg class="ring-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <!-- Track (full ring) -->
+                <circle
+                  class="ring-track"
+                  cx="50"
+                  cy="50"
+                  :r="RING_R"
                   fill="none"
-                  :stroke="`url(#gauge-track-${entry.key})`"
-                  stroke-width="10"
-                  stroke-linecap="round"
+                  stroke-width="8"
                 />
-                <path
+                <!-- Value ring (from top, clockwise) -->
+                <circle
                   v-if="entry.value != null && !Number.isNaN(Number(entry.value))"
-                  class="gauge-fill"
-                  d="M 15 58 A 45 45 0 0 1 105 58"
+                  class="ring-fill"
+                  cx="50"
+                  cy="50"
+                  :r="RING_R"
                   fill="none"
-                  :stroke="gaugeColor(Number(entry.value))"
-                  stroke-width="10"
+                  stroke-width="8"
                   stroke-linecap="round"
-                  :stroke-dasharray="gaugeDash(Number(entry.value))"
+                  transform="rotate(-90 50 50)"
+                  :stroke-dasharray="ringDash(Number(entry.value))"
                 />
                 <text
-                  class="gauge-value"
-                  x="60"
-                  y="48"
+                  class="ring-value"
+                  x="50"
+                  y="50"
                   text-anchor="middle"
                   dominant-baseline="middle"
                 >
@@ -296,16 +284,13 @@ function gaugeColor(value) {
   padding: 1rem;
 }
 
-.metrics-gauges {
+.metrics-rings {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 1.5rem;
 }
 
-.gauge-widget {
-  --gauge-green: #22c55e;
-  --gauge-yellow: #eab308;
-  --gauge-red: #ef4444;
+.ring-widget {
   background: var(--color-background-mute);
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -314,11 +299,11 @@ function gaugeColor(value) {
   transition: box-shadow 0.2s ease;
 }
 
-.gauge-widget:hover {
+.ring-widget:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.gauge-title {
+.ring-title {
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-heading);
@@ -326,43 +311,44 @@ function gaugeColor(value) {
   line-height: 1.3;
 }
 
-.gauge-wrap {
+.ring-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.gauge-svg {
+.ring-svg {
   width: 100%;
-  max-width: 180px;
+  max-width: 120px;
   height: auto;
   display: block;
 }
 
-.gauge-track {
-  opacity: 0.4;
+.ring-track {
+  stroke: var(--color-border);
 }
 
-.gauge-fill {
-  transition: stroke-dasharray 0.5s ease;
+.ring-fill {
+  stroke: #2563eb;
+  transition: stroke-dasharray 0.4s ease;
 }
 
-.gauge-value {
-  font-size: 1.1rem;
+.ring-value {
+  font-size: 1rem;
   font-weight: 700;
   fill: var(--color-heading);
 }
 
 @media (max-width: 520px) {
-  .metrics-gauges {
+  .metrics-rings {
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
   }
-  .gauge-title {
+  .ring-title {
     font-size: 0.75rem;
   }
-  .gauge-value {
-    font-size: 1rem;
+  .ring-value {
+    font-size: 0.9375rem;
   }
 }
 </style>
