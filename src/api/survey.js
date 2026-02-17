@@ -1,5 +1,5 @@
 // VITE_API_URL: set in Heroku Config Vars or .env; use '' for same-origin (API on same app)
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8070'
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
 /**
  * Map frontend gender label to API enum (SaveRequest.gender).
