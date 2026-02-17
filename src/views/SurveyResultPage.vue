@@ -81,8 +81,10 @@ function takeTestAgain() {
 const RING_R = 40
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R
 
+// Use rounded percentage so same value always gives identical dash (consistent alignment)
 function ringDash(value) {
-  const p = Math.min(1, Math.max(0, value / 100))
+  const pct = Math.min(100, Math.max(0, Math.round(Number(value))))
+  const p = pct / 100
   return `${p * RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`
 }
 </script>
@@ -133,7 +135,7 @@ function ringDash(value) {
                   fill="none"
                   stroke-width="8"
                 />
-                <!-- Value ring (from top, clockwise) -->
+                <!-- Value ring (from top, clockwise); no linecap so all rings align at same level -->
                 <circle
                   v-if="entry.value != null && !Number.isNaN(Number(entry.value))"
                   class="ring-fill"
@@ -142,9 +144,8 @@ function ringDash(value) {
                   :r="RING_R"
                   fill="none"
                   stroke-width="8"
-                  stroke-linecap="round"
                   transform="rotate(-90 50 50)"
-                  :stroke-dasharray="ringDash(Number(entry.value))"
+                  :stroke-dasharray="ringDash(entry.value)"
                 />
                 <text
                   class="ring-value"
