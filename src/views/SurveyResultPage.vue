@@ -287,13 +287,14 @@ function ringDash(value) {
 
 .metrics-rings {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 1.5rem;
 }
 
 .ring-widget {
   display: flex;
   flex-direction: column;
+  min-height: 180px;
   background: var(--color-background-mute);
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -306,31 +307,28 @@ function ringDash(value) {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-/* Fixed height so all titles take same space; rings stay on same level */
+/* Title aligned from top */
 .ring-title {
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-heading);
   margin: 0 0 0.5rem;
   line-height: 1.3;
-  min-height: 2.6em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
 }
 
-/* Fixed height ring area so every card has same vertical layout */
+/* Ring aligned from bottom of tile; fixed size so all circles are equal */
 .ring-wrap {
+  margin-top: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 .ring-svg {
-  width: 100%;
-  max-width: 120px;
-  height: auto;
+  width: 100px;
+  height: 100px;
   display: block;
   flex-shrink: 0;
 }
