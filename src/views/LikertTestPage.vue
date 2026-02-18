@@ -47,7 +47,7 @@ const p1Complete = computed(() => {
   if (!a || !g || !s) return false
   const ageNum = parseInt(a, 10)
   const screenNum = parseFloat(s)
-  return !isNaN(ageNum) && ageNum > 0 && ageNum <= 120 && !isNaN(screenNum) && screenNum >= 0
+  return !isNaN(ageNum) && ageNum >= 18 && ageNum <= 22 && !isNaN(screenNum) && screenNum >= 0
 })
 
 const canGoPrevSection = computed(() => currentSectionIndex.value > 0)
@@ -164,8 +164,8 @@ function validateP1() {
     valid = false
   } else {
     const ageNum = parseInt(ageStr, 10)
-    if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
-      errors.age = 'Please enter a value between 1 and 120.'
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 22) {
+      errors.age = 'Please enter a value between 18 and 22.'
       valid = false
     }
   }
@@ -221,7 +221,7 @@ async function submit() {
   const screenStr = String(averageScreenTime.value ?? '').trim()
   const ageNum = parseInt(ageStr, 10)
   const screenNum = parseFloat(screenStr)
-  const validAge = Number.isInteger(ageNum) && ageNum >= 1 && ageNum <= 120 ? ageNum : null
+  const validAge = Number.isInteger(ageNum) && ageNum >= 18 && ageNum <= 22 ? ageNum : null
   const validGender = genderToApiEnum(gender.value) ?? null
   const validScreenTime = !isNaN(screenNum) && screenNum >= 0 ? screenNum : null
 
@@ -253,8 +253,7 @@ async function submit() {
 
 const genderOptions = [
   { value: 'Male', label: 'Male' },
-  { value: 'Female', label: 'Female' },
-  { value: 'Prefer not to say', label: 'Prefer not to say' }
+  { value: 'Female', label: 'Female' }
 ]
 </script>
 
@@ -297,9 +296,9 @@ const genderOptions = [
                 id="age"
                 v-model="age"
                 type="number"
-                min="1"
-                max="120"
-                placeholder="e.g. 16"
+                min="18"
+                max="22"
+                placeholder="e.g. 19"
                 required
                 :aria-invalid="!!p1Errors.age"
                 :aria-describedby="p1Errors.age ? 'age-error' : undefined"

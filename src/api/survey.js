@@ -3,15 +3,14 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
 /**
  * Map frontend gender label to API enum (SaveRequest.gender).
- * @param {string} displayGender - "Male" | "Female" | "Prefer not to say"
- * @returns {string|null} "MALE" | "FEMALE" | "PREFER_NOT_TO_SAY" | null
+ * @param {string} displayGender - "Male" | "Female"
+ * @returns {string|null} "MALE" | "FEMALE" | null
  */
 export function genderToApiEnum(displayGender) {
   if (!displayGender) return null
   const map = {
     Male: 'MALE',
-    Female: 'FEMALE',
-    'Prefer not to say': 'PREFER_NOT_TO_SAY'
+    Female: 'FEMALE'
   }
   return map[displayGender] ?? null
 }
@@ -21,7 +20,7 @@ export function genderToApiEnum(displayGender) {
  * Request body must match SaveRequest: { age?, gender?, averageScreenTime?, questions: SurveyQuestion[] }
  * @param {Object} body - SaveRequest
  * @param {number|null} body.age - integer
- * @param {string|null} body.gender - "MALE" | "FEMALE" | "PREFER_NOT_TO_SAY"
+ * @param {string|null} body.gender - "MALE" | "FEMALE"
  * @param {number|null} body.averageScreenTime - double
  * @param {Array<{question: string, answer: string}>} body.questions
  * @returns {Promise<{uuid: string}>} SaveResponse
