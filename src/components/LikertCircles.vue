@@ -1,6 +1,9 @@
 <script setup>
 import { computed } from 'vue'
 import { LIKERT_OPTIONS } from '../data/likertScale.js'
+import { useI18n } from '../composables/useI18n.js'
+
+const { t } = useI18n()
 
 defineProps({
   /** Selected answer: label string (e.g. "Strongly Agree") for API */
@@ -41,7 +44,7 @@ function select(label) {
 
 <template>
   <div class="likert-circles">
-    <span class="axis-label agree-label">Agree</span>
+    <span class="axis-label agree-label">{{ t.likertAxis.agree }}</span>
     <div class="circles-row">
       <button
         v-for="opt in circles"
@@ -54,7 +57,7 @@ function select(label) {
         @click="select(opt.label)"
       />
     </div>
-    <span class="axis-label disagree-label">Disagree</span>
+    <span class="axis-label disagree-label">{{ t.likertAxis.disagree }}</span>
   </div>
 </template>
 

@@ -8,8 +8,11 @@ import {
   getQuestionsForSection
 } from '../data/questions.js'
 import { saveSurvey, genderToApiEnum } from '../api/survey.js'
+import { useI18n } from '../composables/useI18n.js'
 
 const router = useRouter()
+const { t, locale, setLocale } = useI18n()
+const sectionInstruction = computed(() => t.value.survey.sectionInstruction)
 
 const currentSectionIndex = ref(0)
 const currentIndex = ref(0)
@@ -27,6 +30,10 @@ const averageScreenTime = ref('')
 const p1Errors = ref({ age: '', gender: '', screenTime: '' })
 
 const currentSection = computed(() => sections[currentSectionIndex.value])
+const currentSectionTitleRu = computed(() => {
+  const section = currentSection.value
+  return section ? t.value.survey.sectionTitles[section.id] ?? section.title : ''
+})
 const isP1 = computed(() => currentSectionIndex.value === 0)
 const sectionStartIndexRef = computed(
   () => getQuestionsForSection(currentSectionIndex.value).startIndex
@@ -156,33 +163,34 @@ function validateP1() {
   const screenStr = String(averageScreenTime.value ?? '').trim()
   const errors = { age: '', gender: '', screenTime: '' }
   let valid = true
+  const e = t.value.survey.errors
   if (!ageStr) {
-    errors.age = 'Age is required.'
+    errors.age = e.ageRequired
     valid = false
   } else if (!/^\d+$/.test(ageStr)) {
-    errors.age = 'Please enter a number only (no letters or symbols).'
+    errors.age = e.ageNumber
     valid = false
   } else {
     const ageNum = parseInt(ageStr, 10)
     if (isNaN(ageNum) || ageNum < 18 || ageNum > 22) {
-      errors.age = 'Please enter a value between 18 and 22.'
+      errors.age = e.ageRange
       valid = false
     }
   }
   if (!gender.value) {
-    errors.gender = 'Please select your gender.'
+    errors.gender = e.genderRequired
     valid = false
   }
   if (!screenStr) {
-    errors.screenTime = 'Average screen time is required.'
+    errors.screenTime = e.screenTimeRequired
     valid = false
   } else if (!/^\d+(\.\d+)?$/.test(screenStr)) {
-    errors.screenTime = 'Please enter a number only (e.g. 3 or 4.5). No letters or other symbols.'
+    errors.screenTime = e.screenTimeNumber
     valid = false
   } else {
     const screenNum = parseFloat(screenStr)
     if (isNaN(screenNum) || screenNum < 0) {
-      errors.screenTime = 'Please enter 0 or higher.'
+      errors.screenTime = e.screenTimeMin
       valid = false
     }
   }
@@ -207,7 +215,7 @@ function goNextSection() {
 
 function handleSubmitClick() {
   if (!isComplete.value) {
-    alert('Please answer all questions before submitting.')
+    alert(t.value.survey.answerAll)
     return
   }
   submit()
@@ -251,10 +259,15 @@ async function submit() {
   }
 }
 
-const genderOptions = [
-  { value: 'Male', label: 'Male' },
-  { value: 'Female', label: 'Female' }
-]
+/** Question text for display (en/ru by locale); API still receives English from questions[] */
+function getQuestionDisplay(globalIndex) {
+  return t.value?.questions?.[globalIndex] ?? questions[globalIndex] ?? ''
+}
+
+const genderOptions = computed(() => [
+  { value: 'Male', label: t.value.survey.male },
+  { value: 'Female', label: t.value.survey.female }
+])
 </script>
 
 <template>
@@ -263,20 +276,19 @@ const genderOptions = [
       <div class="progress-bar">
         <div class="progress-fill" :style="{ width: progress + '%' }" />
       </div>
-      <p class="progress-text">
-        Section {{ currentSectionIndex + 1 }} of {{ sections.length }}
-        <span v-if="!isP1" class="progress-section">
-          · Question {{ focusedIndex - sectionStartIndexRef + 1 }} of {{ sectionQuestionsRef.length }}
-        </span>
-      </p>
       <div class="header-nav">
+        <nav class="lang-switcher-inline" aria-label="Language">
+          <button type="button" class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
+          <span class="lang-sep">|</span>
+          <button type="button" class="lang-btn" :class="{ active: locale === 'ru' }" @click="setLocale('ru')">RU</button>
+        </nav>
         <button
           type="button"
           class="nav-btn prev"
           :disabled="!canGoPrevSection"
           @click="goPrevSection"
         >
-          Previous section
+          {{ t.survey.prevSection }}
         </button>
       </div>
     </header>
@@ -286,19 +298,19 @@ const genderOptions = [
       <div v-if="isP1" class="section-page p1-page">
         <div class="p1-card">
           <div class="section-header p1-header">
-            <h2 class="p1-title">{{ currentSection.title }}</h2>
-            <p class="section-description">{{ currentSection.description }}</p>
+            <h2 class="p1-title">{{ currentSectionTitleRu }}</h2>
+            <p class="section-description">{{ t.survey.p1Description }}</p>
           </div>
           <form class="p1-form" @submit.prevent="goNextSection">
             <div class="form-field">
-              <label for="age">Age <span class="required">*</span></label>
+              <label for="age">{{ t.survey.age }} <span class="required">{{ t.survey.required }}</span></label>
               <input
                 id="age"
                 v-model="age"
                 type="number"
                 min="18"
                 max="22"
-                placeholder="e.g. 19"
+                :placeholder="t.survey.agePlaceholder"
                 required
                 :aria-invalid="!!p1Errors.age"
                 :aria-describedby="p1Errors.age ? 'age-error' : undefined"
@@ -307,7 +319,7 @@ const genderOptions = [
               <p v-if="p1Errors.age" id="age-error" class="form-error">{{ p1Errors.age }}</p>
             </div>
             <div class="form-field">
-              <label for="gender">Gender <span class="required">*</span></label>
+              <label for="gender">{{ t.survey.gender }} <span class="required">{{ t.survey.required }}</span></label>
               <select
                 id="gender"
                 v-model="gender"
@@ -317,7 +329,7 @@ const genderOptions = [
                 :aria-describedby="p1Errors.gender ? 'gender-error' : undefined"
                 @change="clearP1Error('gender')"
               >
-                <option value="" disabled>Select gender</option>
+                <option value="" disabled>{{ t.survey.selectGender }}</option>
                 <option v-for="opt in genderOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </option>
@@ -325,14 +337,14 @@ const genderOptions = [
               <p v-if="p1Errors.gender" id="gender-error" class="form-error">{{ p1Errors.gender }}</p>
             </div>
             <div class="form-field">
-              <label for="screen-time">Average screen time in hours (only number) <span class="required">*</span></label>
+              <label for="screen-time">{{ t.survey.screenTime }} <span class="required">{{ t.survey.required }}</span></label>
               <input
                 id="screen-time"
                 v-model="averageScreenTime"
                 type="number"
                 min="0"
                 step="0.5"
-                placeholder="e.g. 3 or 4.5"
+                :placeholder="t.survey.screenTimePlaceholder"
                 required
                 :aria-invalid="!!p1Errors.screenTime"
                 :aria-describedby="p1Errors.screenTime ? 'screen-time-error' : undefined"
@@ -347,8 +359,8 @@ const genderOptions = [
       <!-- P2–P6: One section per page -->
       <div v-else class="section-page">
         <div ref="sectionHeaderRef" class="section-header section-header-questions">
-          <h3 class="section-title">{{ currentSection.title }}</h3>
-          <p class="section-description">{{ currentSection.description }}</p>
+          <h3 class="section-title">{{ currentSectionTitleRu }}</h3>
+          <p class="section-description">{{ sectionInstruction }}</p>
         </div>
         <div
           v-for="(q, i) in sectionQuestionsRef"
@@ -357,7 +369,7 @@ const genderOptions = [
           class="question-block"
         >
           <LikertQuestion
-            :question="q"
+            :question="getQuestionDisplay(sectionStartIndexRef + i)"
             :value="getAnswer(sectionStartIndexRef + i)"
             :dimmed="sectionStartIndexRef + i !== focusedIndex"
             @update:value="setAnswer(sectionStartIndexRef + i, $event)"
@@ -372,7 +384,7 @@ const genderOptions = [
             :disabled="!canShowNextSection"
             @click="goNextSection"
           >
-            <span class="pill-btn-text">Next</span>
+            <span class="pill-btn-text">{{ t.survey.next }}</span>
             <svg class="pill-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -384,7 +396,7 @@ const genderOptions = [
             :disabled="submitting"
             @click.prevent="handleSubmitClick"
           >
-            <span class="pill-btn-text">{{ submitting ? 'Submitting…' : 'Submit' }}</span>
+            <span class="pill-btn-text">{{ submitting ? t.survey.submitting : t.survey.submit }}</span>
           </button>
         </nav>
       </div>
@@ -397,7 +409,7 @@ const genderOptions = [
           :disabled="!isP1 && !canShowNextSection"
           @click="goNextSection"
         >
-          <span class="pill-btn-text">Next</span>
+          <span class="pill-btn-text">{{ t.survey.next }}</span>
           <svg class="pill-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -409,7 +421,7 @@ const genderOptions = [
           :disabled="submitting"
           @click.prevent="handleSubmitClick"
         >
-          <span class="pill-btn-text">{{ submitting ? 'Submitting…' : 'Submit' }}</span>
+          <span class="pill-btn-text">{{ submitting ? t.survey.submitting : t.survey.submit }}</span>
         </button>
       </nav>
 
@@ -464,7 +476,33 @@ const genderOptions = [
 
 .header-nav {
   margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
+
+.lang-switcher-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.lang-switcher-inline .lang-btn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.lang-switcher-inline .lang-btn:hover { opacity: 1; }
+.lang-switcher-inline .lang-btn.active { color: #2563eb; opacity: 1; }
+.lang-switcher-inline .lang-sep { color: var(--color-text); opacity: 0.5; }
 
 .header-nav .nav-btn {
   padding: 0.5rem 1rem;
@@ -656,7 +694,7 @@ const genderOptions = [
   flex-wrap: wrap;
   position: sticky;
   bottom: 0;
-  background: var(--color-background);
+  background: transparent;
   z-index: 5;
 }
 

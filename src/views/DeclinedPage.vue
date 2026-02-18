@@ -1,6 +1,8 @@
 <script setup>
-// Optional: try to close window if it was opened as popup
 import { onMounted } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
+
+const { t } = useI18n()
 onMounted(() => {
   setTimeout(() => window.close(), 200)
 })
@@ -9,10 +11,8 @@ onMounted(() => {
 <template>
   <div class="declined-page">
     <div class="declined-content">
-      <h1 class="declined-title">You declined</h1>
-      <p class="declined-text">
-        You have not agreed to data collection. You may close this tab.
-      </p>
+      <h1 class="declined-title">{{ t.declined.title }}</h1>
+      <p class="declined-text">{{ t.declined.text }}</p>
     </div>
   </div>
 </template>

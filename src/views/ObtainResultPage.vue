@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getSurveyById } from '../api/survey.js'
+import { useI18n } from '../composables/useI18n.js'
+
+const { t, locale, setLocale } = useI18n()
 
 const router = useRouter()
 const surveyId = ref('')
@@ -11,7 +14,7 @@ const loading = ref(false)
 async function submit() {
   const id = surveyId.value?.trim()
   if (!id) {
-    error.value = 'Please enter your survey ID.'
+    error.value = t.value.obtain.errorIdRequired
     return
   }
   error.value = ''
@@ -20,7 +23,7 @@ async function submit() {
     await getSurveyById(id)
     router.push(`/survey/${encodeURIComponent(id)}`)
   } catch (e) {
-    error.value = e?.message ?? 'No results found for this ID. Please check and try again.'
+    error.value = e?.message ?? t.value.obtain.errorNotFound
   } finally {
     loading.value = false
   }
@@ -30,23 +33,28 @@ async function submit() {
 <template>
   <div class="obtain-page">
     <div class="obtain-card">
-      <h1 class="obtain-title">Obtain your result</h1>
-      <p class="obtain-desc">Enter the survey ID you received after completing the test.</p>
+      <nav class="lang-switcher-obtain" aria-label="Language">
+        <button type="button" class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
+        <span class="lang-sep">|</span>
+        <button type="button" class="lang-btn" :class="{ active: locale === 'ru' }" @click="setLocale('ru')">RU</button>
+      </nav>
+      <h1 class="obtain-title">{{ t.obtain.title }}</h1>
+      <p class="obtain-desc">{{ t.obtain.description }}</p>
       <form class="obtain-form" @submit.prevent="submit">
         <input
           v-model="surveyId"
           type="text"
           class="obtain-input"
-          placeholder="e.g. abc12345-6789-..."
+          :placeholder="t.obtain.placeholder"
           autocomplete="off"
           @input="error = ''"
         />
         <p v-if="error" class="obtain-error">{{ error }}</p>
         <button type="submit" class="btn primary" :disabled="loading">
-          {{ loading ? 'Checking…' : 'View results' }}
+          {{ loading ? t.obtain.checking : t.obtain.viewResults }}
         </button>
       </form>
-      <router-link to="/" class="obtain-back">← Back to home</router-link>
+      <router-link to="/" class="obtain-back">{{ t.obtain.backToHome }}</router-link>
     </div>
   </div>
 </template>
@@ -74,6 +82,30 @@ async function submit() {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--color-border);
 }
+
+.lang-switcher-obtain {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.lang-switcher-obtain .lang-btn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.lang-switcher-obtain .lang-btn:hover { opacity: 1; }
+.lang-switcher-obtain .lang-btn.active { color: #2563eb; opacity: 1; }
+.lang-switcher-obtain .lang-sep { color: var(--color-text); opacity: 0.5; }
 
 .obtain-title {
   font-size: 1.5rem;
