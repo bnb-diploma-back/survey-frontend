@@ -292,7 +292,16 @@ function tierColor(tier) {
                 class="dimension-card"
                 :class="['tier-' + (entry.tier ?? 1), { 'has-value': entry.value != null, 'is-risk': RISK_KEYS.includes(entry.key) }]"
               >
-                <p class="dimension-label">{{ entry.label }}</p>
+                <div class="dimension-card-header">
+                  <p class="dimension-label">{{ entry.label }}</p>
+                  <span class="dimension-percent">{{ entry.value != null ? Math.round(Number(entry.value)) : '—' }}%</span>
+                </div>
+                <div class="dimension-bar-wrap">
+                  <div
+                    class="dimension-bar-fill"
+                    :style="{ width: (entry.value != null ? Math.min(100, Math.max(0, entry.value)) : 0) + '%', background: tierColor(entry.tier ?? 1) }"
+                  />
+                </div>
                 <div class="dimension-ring-wrap">
                   <svg
                     class="dimension-ring-svg"
@@ -646,6 +655,27 @@ function tierColor(tier) {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+.dimension-card-header {
+  margin-bottom: 0.5rem;
+}
+
+.dimension-card-header .dimension-label {
+  margin: 0 0 0.5rem;
+}
+
+.dimension-percent {
+  display: none;
+}
+
+.dimension-bar-wrap {
+  display: none;
+  height: 8px;
+  background: var(--color-background-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
 .dimension-label {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -704,6 +734,12 @@ function tierColor(tier) {
   color: var(--color-text);
   opacity: 0.7;
   margin: 0.25rem 0 0;
+}
+
+.dimension-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
 }
 
 /* Risk section */
@@ -812,7 +848,7 @@ function tierColor(tier) {
   margin: 0;
 }
 
-/* Mobile: solid dark blue background (no image), dimension tiles in two columns */
+/* Mobile: solid dark blue background, dimension tiles same style as risk cards, risk section hidden */
 @media (max-width: 640px) {
   .result-page {
     background-image: none;
@@ -820,18 +856,55 @@ function tierColor(tier) {
   }
 
   .dimensions-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
   .dimension-card {
-    min-width: 0;
-    min-height: 240px;
+    min-height: 0;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 1.25rem;
+    text-align: left;
   }
 
-  .risk-grid {
-    grid-template-columns: 1fr;
+  .dimension-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
   }
+
+  .dimension-card-header .dimension-label {
+    min-height: 0;
+    margin: 0;
+    justify-content: flex-start;
+    font-size: 0.9375rem;
+  }
+
+  .dimension-percent {
+    display: inline;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-heading);
+  }
+
+  .dimension-bar-wrap {
+    display: block;
+  }
+
+  .dimension-ring-wrap {
+    display: none;
+  }
+
+  .dimension-insight {
+    margin-top: 0.5rem;
+  }
+
+  .risk-section {
+    display: none;
+  }
+
   .tips-grid {
     grid-template-columns: 1fr;
   }
